@@ -1,0 +1,26 @@
+{
+  "route_closure:medium": {
+    "balanced": 0.0,
+    "service_first": 0.0,
+    "cost_guarded": 0.0,
+    "co2_aware": 0.28399215110828846
+  },
+  "demand_spike:medium": {
+    "balanced": -0.007804118525706671,
+    "service_first": -0.007804118525706671,
+    "cost_guarded": -0.007804118525706671,
+    "co2_aware": -0.007804118525706671
+  },
+  "demand_spike:high": {
+    "balanced": 0.0,
+    "service_first": 0.0,
+    "cost_guarded": 0.0,
+    "co2_aware": -0.07244660237154127
+  },
+  "truck_breakdown:low": {
+    "balanced": 0.0,
+    "service_first": 0.012327692686584828,
+    "cost_guarded": 0.0,
+    "co2_aware": 0.0
+  }
+}

@@ -1,0 +1,18 @@
+metrics_to_run:
+  - final_response_quality
+  - safety
+  - calculation_boundary_grounding
+
+custom_metrics:
+  - name: calculation_boundary_grounding
+    custom_function: |
+      def evaluate(instance):
+          response = instance.get("response") or {}
+          parts = response.get("parts") or []
+          text = " ".join(str(part.get("text", "")) for part in parts).lower()
+          required_terms = ["gemini", "deterministic", "tool"]
+          score = 1.0 if all(term in text for term in required_terms) else 0.0
+          return {
+              "score": score,
+              "explanation": "Response should distinguish Gemini reasoning from deterministic logistics tools."
+          }

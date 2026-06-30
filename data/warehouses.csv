@@ -1,0 +1,3 @@
+warehouse_id,city,capacity_pallets,current_inventory_pallets,daily_throughput_limit
+WH-MILAN,Milan,2000,1200,500
+WH-BOLOGNA,Bologna,1500,800,400

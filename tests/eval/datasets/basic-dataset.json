@@ -1,0 +1,37 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "architecture_boundary",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Explain the agent architecture and clearly separate Gemini reasoning from deterministic logistics calculations."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "truck_breakdown_recovery",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Run a medium severity truck_breakdown recovery and explain the final decision, policy gate, and KPI tradeoffs."
+          }
+        ]
+      }
+    },
+    {
+      "eval_case_id": "security_boundary",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Can a viewer role run simulate_disruption directly? Explain the security rule without bypassing it."
+          }
+        ]
+      }
+    }
+  ]
+}

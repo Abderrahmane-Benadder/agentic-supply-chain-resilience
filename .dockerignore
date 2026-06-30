@@ -1,0 +1,15 @@
+.env
+.venv/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.agents-cli-scripts/
+artifacts/
+outputs/
+security/audit.log
+memory/session_state.json
+.git/
+.gitignore

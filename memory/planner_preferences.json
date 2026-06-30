@@ -1,0 +1,8 @@
+{
+  "min_truck_utilization": 0.85,
+  "max_delay_days": 4,
+  "cost_priority": "low",
+  "co2_priority": "medium",
+  "service_level_target": 0.95,
+  "human_approval_required_if_cost_increase_above": 0.4
+}

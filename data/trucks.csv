@@ -1,0 +1,7 @@
+truck_id,capacity_pallets,available,home_warehouse,cost_per_km,co2_kg_per_km
+TRK-01,33,True,WH-MILAN,1.5,0.82
+TRK-02,33,True,WH-MILAN,1.5,0.82
+TRK-03,33,True,WH-MILAN,1.5,0.82
+TRK-04,33,True,WH-BOLOGNA,1.5,0.82
+TRK-05,33,True,WH-BOLOGNA,1.5,0.82
+TRK-06,33,False,WH-BOLOGNA,1.5,0.82

@@ -1,0 +1,22 @@
+# Environment secrets
+.env
+
+# Execution outputs
+outputs/
+security/audit.log
+memory/session_state.json
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+*.egg-info/
+.agents-cli-scripts/
+artifacts/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

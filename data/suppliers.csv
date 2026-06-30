@@ -1,0 +1,4 @@
+supplier_id,city,reliability,lead_time_days,backup_supplier
+SUP-01,Turin,0.95,3,SUP-02
+SUP-02,Genoa,0.9,4,SUP-03
+SUP-03,Florence,0.85,6,SUP-01
