@@ -487,6 +487,167 @@ Proceed according to the policy gate shown in the dashboard. Numerical results a
 """
 
 
+STEP_AGENT_DETAILS = {
+    "Security Check": (
+        "SecurityAgent",
+        "Safety and authorization view",
+        "Checks whether the request and tool access are allowed before the workflow continues.",
+    ),
+    "Disruption Analysis": (
+        "DisruptionAgent",
+        "Network impact view",
+        "Identifies the disrupted scenario, severity, and affected supply-chain element.",
+    ),
+    "Demand Impact Analysis": (
+        "DemandAgent",
+        "Customer service view",
+        "Measures how many orders or customers are exposed to demand and SLA risk.",
+    ),
+    "Inventory Feasibility check": (
+        "InventoryAgent",
+        "Fulfillment feasibility view",
+        "Checks whether warehouse stock and fallback fulfillment capacity can support the plan.",
+    ),
+    "Transport Re-routing": (
+        "TransportAgent",
+        "Execution planning view",
+        "Builds truckloads and route sequences using deterministic logistics tools.",
+    ),
+    "Plan Evaluation": (
+        "EvaluationAgent",
+        "KPI tradeoff view",
+        "Compares measured recovery KPIs such as cost, service, CO2, delay, and utilization.",
+    ),
+    "Agentic AI Specialist Review": (
+        "AgenticAIOrchestrator",
+        "Specialist reasoning view",
+        "Uses Gemini specialist reviews when configured, otherwise records deterministic role reasoning.",
+    ),
+    "Plan Verification": (
+        "SecurityAgent",
+        "Post-plan validation view",
+        "Verifies that the generated plan does not violate configured guardrails.",
+    ),
+    "Human Approval Gate": (
+        "HumanApprovalAgent",
+        "Governance view",
+        "Decides whether the plan can be approved automatically or needs planner sign-off.",
+    ),
+    "RL Policy Update": (
+        "ReinforcementLearningAgent",
+        "Learning policy view",
+        "Updates scenario-level strategy preference weights from KPI reward signals.",
+    ),
+    "Explanation Generation": (
+        "ExplanationAgent",
+        "Executive communication view",
+        "Turns trace, KPIs, and approval status into a manager-ready recommendation.",
+    ),
+}
+
+
+def summarize_trace_output(output: Any) -> str:
+    if output is None:
+        return "No detailed output recorded."
+    if not isinstance(output, dict):
+        return str(output)
+
+    if "specialist_reviews" in output:
+        mode = output.get("mode", "specialist_review")
+        used = "Gemini specialist reasoning" if output.get("ai_reasoning_used") else "deterministic specialist trace"
+        reviews = output.get("specialist_reviews") or []
+        review_bits = []
+        for review in reviews[:3]:
+            review_bits.append(
+                f"{review.get('agent', 'Agent')}: {review.get('decision') or review.get('reasoning', 'review recorded')}"
+            )
+        extra = "; ".join(review_bits) if review_bits else output.get("executive_recommendation", "review recorded")
+        return f"{used} via `{mode}`. {extra}"
+
+    keys = [
+        "input_validated",
+        "tool_permission_validated",
+        "role",
+        "disruption",
+        "severity",
+        "orders_evaluated",
+        "assignments_made",
+        "trucks_packed",
+        "total_freight_cost_usd",
+        "total_co2_emissions_kg",
+        "average_utilization_pct",
+        "cost_increase_pct",
+        "human_approval_required",
+        "status",
+        "action",
+        "old_value",
+        "new_value",
+        "explanation",
+    ]
+    parts = []
+    for key in keys:
+        if key in output:
+            value = output[key]
+            if isinstance(value, float):
+                value = round(value, 2)
+            parts.append(f"{key}: {value}")
+
+    if parts:
+        return "; ".join(parts)
+
+    compact_items = list(output.items())[:4]
+    return "; ".join(f"{key}: {value}" for key, value in compact_items)
+
+
+def build_agent_outputs_response(agent_trace: List[Dict[str, Any]]) -> str:
+    if not agent_trace:
+        return "I do not have a completed execution trace yet. Run a scenario first, then I can explain each agent output from the last run."
+
+    lines = ["Here is what each agent produced in the last run:"]
+    for step in agent_trace:
+        step_name = step.get("step", "Workflow step")
+        agent, view, purpose = STEP_AGENT_DETAILS.get(
+            step_name,
+            ("Workflow component", "Operational view", TRACE_EXPLANATIONS.get(step_name, "Workflow step.")),
+        )
+        lines.append(
+            f"- {agent} ({step_name}, {step.get('status', 'Unknown')}): {view}. "
+            f"{purpose} Output: {summarize_trace_output(step.get('output'))}"
+        )
+
+    lines.append(
+        "Expected user action: review the KPI scorecard and policy gate. "
+        "If the status is pending human approval, the user should approve or reject dispatch; "
+        "if it is approved, the user can export the report or rerun with different planner preferences."
+    )
+    return "\n".join(lines)
+
+
+def build_agent_point_of_view_response(agent_trace: List[Dict[str, Any]], agentic_review: Dict[str, Any]) -> str:
+    review = agentic_review or {}
+    reviews = review.get("specialist_reviews") or []
+    if reviews:
+        lines = ["The clearest agent point-of-view analysis comes from the specialist review layer:"]
+        for item in reviews:
+            lines.append(
+                f"- {item.get('agent', 'Agent')}: {item.get('reasoning', 'No reasoning recorded')} "
+                f"Decision: {item.get('decision', 'No decision recorded')}"
+            )
+        if review.get("executive_recommendation"):
+            lines.append(f"Executive recommendation: {review['executive_recommendation']}")
+        return "\n".join(lines)
+
+    if agent_trace:
+        return (
+            "The agent point of view is split across the execution trace. "
+            "EvaluationAgent gives the KPI tradeoff analysis, HumanApprovalAgent gives the governance decision, "
+            "TransportAgent gives the operational routing/loading view, and ExplanationAgent turns those outputs into the final manager recommendation.\n\n"
+            + build_agent_outputs_response(agent_trace)
+        )
+
+    return "Run a scenario first, then the assistant can explain the point of view and output of each agent from the execution trace."
+
+
 def build_project_assistant_response(
     user_input: str,
     scenario_type: str,
@@ -496,9 +657,13 @@ def build_project_assistant_response(
     decision: str,
     approval_threshold: float,
     default_prefs: Dict[str, Any],
+    agent_trace: List[Dict[str, Any]] | None = None,
+    agentic_review: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     """Return a useful deterministic assistant response when Gemini is offline or too generic."""
     query = user_input.lower()
+    agent_trace = agent_trace or []
+    agentic_review = agentic_review or {}
     base_cost = kpi_value(base_kpi, "cost_usd", 0)
     rec_cost = kpi_value(rec_kpi, "cost_usd", 0)
     cost_delta_pct = ((rec_cost - base_cost) / base_cost * 100.0) if base_cost else 0.0
@@ -512,6 +677,29 @@ def build_project_assistant_response(
     wants_approval = any(term in query for term in ["approval", "pending", "why", "policy", "threshold"])
     wants_summary = any(term in query for term in ["summary", "summarize", "status", "current plan", "kpi"])
     wants_ai_truth = any(term in query for term in ["deterministic", "agentic ai", "actually used", "ai tech", "reinforcement", "rl", "learning"])
+    wants_last_run = any(term in query for term in ["last run", "last simulation", "last workflow", "what did we do", "outcomes", "outputs"])
+    wants_agent_outputs = any(term in query for term in ["every agent", "each agent", "agent output", "outputs of", "output of"])
+    wants_point_of_view = any(term in query for term in ["point of view", "analysis", "analyzis", "analyse", "analyze", "which agent gives"])
+
+    if wants_agent_outputs or wants_last_run:
+        response = f"""Last run: `{scenario_type}` with final status `{decision}`.
+
+Measured outcomes:
+- Baseline cost: {money(base_cost)}
+- Disrupted cost: {money(kpi_value(disc_kpi, "cost_usd", 0))}
+- Recovery cost: {money(rec_cost)}
+- Recovery service level: {pct(rec_otif)}
+- Recovery delay: {rec_delay:.1f} hours
+- Recovery CO2: {rec_co2:,.0f} kg
+
+{build_agent_outputs_response(agent_trace)}"""
+        return {"response": response, "updated_preferences": {}}
+
+    if wants_point_of_view:
+        return {
+            "response": build_agent_point_of_view_response(agent_trace, agentic_review),
+            "updated_preferences": {},
+        }
 
     if wants_agents or wants_workflow:
         response = f"""This project is a supply-chain resilience control tower. A planner chooses a disruption scenario, then the system runs a multi-agent workflow that compares normal operations, the disrupted state, and a recovery plan.
@@ -624,6 +812,13 @@ def should_answer_locally(user_input: str) -> bool:
         "ai tech",
         "reinforcement",
         "rl",
+        "last run",
+        "last simulation",
+        "outputs",
+        "outcomes",
+        "point of view",
+        "analysis",
+        "analyzis",
     ]
     return any(term in query for term in project_terms)
 
@@ -1410,6 +1605,8 @@ with assistant_cols[1]:
                 decision,
                 approval_threshold,
                 default_prefs,
+                session_state.get("agent_trace", []),
+                session_state.get("agentic_ai_review", {}),
             )
             assistant_prompt = f"""
 Return only JSON with this schema:
@@ -1429,6 +1626,8 @@ baseline_kpis={base_kpi}
 disrupted_kpis={disc_kpi}
 recovery_kpis={rec_kpi}
 planner_preferences={default_prefs}
+agent_trace={session_state.get("agent_trace", [])}
+agentic_ai_review={session_state.get("agentic_ai_review", {})}
 known_agents=[
   "SupervisorAgent coordinates the workflow",
   "SecurityAgent validates requests and guardrails",
