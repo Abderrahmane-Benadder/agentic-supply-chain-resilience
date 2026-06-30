@@ -258,6 +258,7 @@ Run a high severity route_closure recovery and explain whether dispatch needs hu
 ### **Submission and Deployment Guides**
 - Kaggle writeup draft: [KAGGLE_SUBMISSION.md](KAGGLE_SUBMISSION.md)
 - Google Cloud deployment guide: [DEPLOYMENT.md](DEPLOYMENT.md)
+- Architecture graph: [ARCHITECTURE_GRAPH.md](ARCHITECTURE_GRAPH.md)
 - Public GitHub repository: https://github.com/Abderrahmane-Benadder/agentic-supply-chain-resilience
 - Live Cloud Run ADK service: https://supply-chain-resilience-xxzkv6nlxa-ue.a.run.app
 
