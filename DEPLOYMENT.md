@@ -5,10 +5,12 @@ This project can be deployed as an ADK FastAPI service on Google Cloud Run. Clou
 ## Current Local Status
 - Docker is installed.
 - `gcloud` is installed at `C:\Users\aben5\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd`.
-- The app has a Cloud Run-ready Dockerfile.
+- The ADK backend has a Cloud Run-ready Dockerfile.
+- The Streamlit dashboard has a separate `Dockerfile.streamlit`.
 - `.env` is ignored and must not be copied into the image.
 - Cloud Run deployment succeeded for project `kaggle-project-500912`.
-- Live service URL: `https://supply-chain-resilience-xxzkv6nlxa-ue.a.run.app`
+- Live Streamlit dashboard URL: `https://supply-chain-dashboard-xxzkv6nlxa-ue.a.run.app`
+- Live ADK backend URL: `https://supply-chain-resilience-xxzkv6nlxa-ue.a.run.app`
 
 ## Before Deploying
 Install Google Cloud CLI:
@@ -64,7 +66,7 @@ If the secret already exists:
 echo YOUR_GEMINI_API_KEY | gcloud secrets versions add GEMINI_API_KEY --data-file=-
 ```
 
-## Deploy To Cloud Run
+## Deploy ADK Backend To Cloud Run
 Run from the project root:
 
 ```powershell
@@ -80,14 +82,38 @@ gcloud run deploy supply-chain-resilience `
 
 Cloud Run will build the Dockerfile and return a service URL.
 
+## Deploy Streamlit Dashboard To Cloud Run
+The Streamlit dashboard is deployed as a separate service so the planner UI and ADK backend can be verified independently.
+
+```powershell
+gcloud builds submit `
+  --project kaggle-project-500912 `
+  --config cloudbuild.streamlit.yaml `
+  --substitutions _IMAGE=us-east1-docker.pkg.dev/kaggle-project-500912/cloud-run-source-deploy/supply-chain-dashboard:latest `
+  .
+
+gcloud run deploy supply-chain-dashboard `
+  --project kaggle-project-500912 `
+  --region us-east1 `
+  --image us-east1-docker.pkg.dev/kaggle-project-500912/cloud-run-source-deploy/supply-chain-dashboard:latest `
+  --allow-unauthenticated `
+  --port 8080 `
+  --memory 2Gi `
+  --cpu 1 `
+  --max-instances 3 `
+  --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest `
+  --set-env-vars GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=False
+```
+
 ## Verify The Cloud Run Service
 Open:
 
 ```text
+https://supply-chain-dashboard-xxzkv6nlxa-ue.a.run.app
 https://supply-chain-resilience-xxzkv6nlxa-ue.a.run.app
 ```
 
-The ADK web UI should list only one app: `adk_app`. Select `adk_app`, create or use a session, then enter a prompt. The backend `/run` endpoint has been smoke-tested successfully.
+The dashboard URL should load the Streamlit planner interface. The ADK web UI should list only one app: `adk_app`. Select `adk_app`, create or use a session, then enter a prompt. Both the dashboard page and backend `/run` endpoint have been smoke-tested successfully.
 
 Useful endpoints are served by the ADK FastAPI app. You can also inspect logs:
 

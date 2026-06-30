@@ -1,0 +1,15 @@
+substitutions:
+  _IMAGE: us-east1-docker.pkg.dev/kaggle-project-500912/cloud-run-source-deploy/supply-chain-dashboard:latest
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile.streamlit
+      - -t
+      - ${_IMAGE}
+      - .
+
+images:
+  - ${_IMAGE}

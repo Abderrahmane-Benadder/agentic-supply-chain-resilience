@@ -1,0 +1,26 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py config.py main.py ./
+COPY agents ./agents
+COPY adk_app ./adk_app
+COPY data ./data
+COPY evaluation ./evaluation
+COPY mcp_server ./mcp_server
+COPY memory ./memory
+COPY security ./security
+COPY skills ./skills
+COPY tools ./tools
+COPY .streamlit ./.streamlit
+
+EXPOSE 8080
+
+CMD ["sh", "-c", "streamlit run app.py --server.address=0.0.0.0 --server.port=${PORT:-8080}"]

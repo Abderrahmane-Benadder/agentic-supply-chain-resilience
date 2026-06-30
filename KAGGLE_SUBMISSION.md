@@ -90,15 +90,16 @@ The competition asks for at least three course concepts. This project demonstrat
 | MCP Server | `mcp_server/server.py`, `mcp_server/tool_registry.py` as a lightweight MCP-inspired local tool layer |
 | Antigravity | Mention and show the Antigravity IDE / project workflow in the demo video |
 | Security features | `security/guardrails.py`, `agents/security_agent.py`, audit logs, RBAC tool checks |
-| Deployability | Live Cloud Run URL and `DEPLOYMENT.md` |
+| Deployability | Live Streamlit dashboard, live ADK Cloud Run backend, and `DEPLOYMENT.md` |
 | Agent skills / Agents CLI | `skills/`, `AGENTS.md`, `agents-cli-manifest.yaml`, `tests/eval/` |
 
 ## Links To Include In Kaggle
 - GitHub repository: `https://github.com/Abderrahmane-Benadder/agentic-supply-chain-resilience`
-- Live Cloud Run URL: `https://supply-chain-resilience-xxzkv6nlxa-ue.a.run.app`
+- Live Streamlit dashboard: `https://supply-chain-dashboard-xxzkv6nlxa-ue.a.run.app`
+- Live ADK backend: `https://supply-chain-resilience-xxzkv6nlxa-ue.a.run.app`
 - Optional demo video: `ADD_VIDEO_URL`
 
-When opening the Cloud Run URL, select the `adk_app` app in the ADK web UI before sending a prompt.
+When opening the ADK backend URL, select the `adk_app` app in the ADK web UI before sending a prompt.
 
 ## Reproducibility Commands
 ```bash
