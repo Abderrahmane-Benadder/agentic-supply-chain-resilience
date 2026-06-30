@@ -23,7 +23,11 @@ from security import guardrails
 from tools import data_tools
 
 
-if config.has_valid_gemini_key():
+if config.has_vertex_gemini_runtime():
+    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
+    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", config.GOOGLE_CLOUD_PROJECT)
+    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", config.GOOGLE_CLOUD_LOCATION)
+elif config.has_valid_gemini_key():
     os.environ.setdefault("GOOGLE_API_KEY", config.GEMINI_API_KEY)
     os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "False")
 

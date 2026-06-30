@@ -16,6 +16,14 @@ load_dotenv(dotenv_path=BASE_DIR / ".env")
 # Config parameters
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "mock-api-key")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "False").lower() in ("1", "true", "yes")
+GOOGLE_CLOUD_PROJECT = (
+    os.getenv("GOOGLE_CLOUD_PROJECT")
+    or os.getenv("GOOGLE_CLOUD_PROJECT_ID")
+    or os.getenv("GCLOUD_PROJECT")
+    or ""
+)
+GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 ENV = os.getenv("ENV", "development")
 
@@ -60,3 +68,23 @@ def has_valid_gemini_key() -> bool:
         and GEMINI_API_KEY not in ("mock-api-key", "mock-api-key-for-skeleton-testing")
         and len(GEMINI_API_KEY) > 8
     )
+
+def has_vertex_gemini_runtime() -> bool:
+    """Return True when Gemini should use Vertex AI project credentials."""
+    return bool(GOOGLE_GENAI_USE_VERTEXAI and GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION)
+
+def has_live_gemini_runtime() -> bool:
+    """Return True when Gemini can be reached through API key or Vertex AI."""
+    return has_vertex_gemini_runtime() or has_valid_gemini_key()
+
+def create_genai_client():
+    """Create a Gemini client using the configured runtime path."""
+    from google import genai
+
+    if has_vertex_gemini_runtime():
+        return genai.Client(
+            vertexai=True,
+            project=GOOGLE_CLOUD_PROJECT,
+            location=GOOGLE_CLOUD_LOCATION,
+        )
+    return genai.Client(api_key=GEMINI_API_KEY)

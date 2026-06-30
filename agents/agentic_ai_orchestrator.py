@@ -36,12 +36,12 @@ class AgenticAIOrchestrator:
     """Coordinates optional Gemini-based specialist reasoning over tool outputs."""
 
     def __init__(self) -> None:
-        self.enabled = bool(HAS_GENAI and config.has_valid_gemini_key())
+        self.enabled = bool(HAS_GENAI and config.has_live_gemini_runtime())
         self.init_error = ""
         self.client = None
         if self.enabled:
             try:
-                self.client = genai.Client(api_key=config.GEMINI_API_KEY)
+                self.client = config.create_genai_client()
             except Exception as exc:
                 self.enabled = False
                 self.init_error = str(exc)
@@ -124,6 +124,7 @@ Logistics tool summary: {logistics_summary}
             self._enforce_policy_gate(parsed, approval_result)
             return parsed
         except Exception as exc:
+            print(f"Gemini specialist review failed: {type(exc).__name__}: {exc}")
             fallback = self._offline_review(
                 scenario_type,
                 severity_label,

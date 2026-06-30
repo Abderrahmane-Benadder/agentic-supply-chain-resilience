@@ -70,7 +70,7 @@ TRACE_EXPLANATIONS = {
 
 
 def has_live_gemini() -> bool:
-    return bool(HAS_GENAI and config.has_valid_gemini_key())
+    return bool(HAS_GENAI and config.has_live_gemini_runtime())
 
 
 def extract_json_object(text: str) -> Dict[str, Any]:
@@ -91,7 +91,7 @@ def generate_json_with_gemini(prompt: str, fallback: Dict[str, Any]) -> Dict[str
         return fallback
 
     try:
-        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        client = config.create_genai_client()
         response = client.models.generate_content(
             model=config.GEMINI_MODEL,
             contents=prompt,

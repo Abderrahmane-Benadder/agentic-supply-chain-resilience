@@ -34,9 +34,9 @@ class SecurityAgent:
         # Google ADK Pattern: Define Agent wrapper with system instructions and tools
         self.agent = None
         self.client = None
-        if HAS_GENAI and config.has_valid_gemini_key():
+        if HAS_GENAI and config.has_live_gemini_runtime():
             try:
-                self.client = genai.Client(api_key=config.GEMINI_API_KEY)
+                self.client = config.create_genai_client()
                 if hasattr(types, "AgentConfig") and hasattr(self.client, "agents"):
                     self.agent = self.client.agents.create(
                         model=config.GEMINI_MODEL,
