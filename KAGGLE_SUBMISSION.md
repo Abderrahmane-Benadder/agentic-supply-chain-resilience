@@ -94,7 +94,7 @@ The competition asks for at least three course concepts. This project demonstrat
 | Agent skills / Agents CLI | `skills/`, `AGENTS.md`, `agents-cli-manifest.yaml`, `tests/eval/` |
 
 ## Links To Include In Kaggle
-- GitHub repository: `ADD_YOUR_REPO_URL`
+- GitHub repository: `https://github.com/Abderrahmane-Benadder/agentic-supply-chain-resilience`
 - Live Cloud Run URL: `https://supply-chain-resilience-xxzkv6nlxa-ue.a.run.app`
 - Optional demo video: `ADD_VIDEO_URL`
 
