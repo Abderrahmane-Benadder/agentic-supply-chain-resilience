@@ -793,36 +793,6 @@ Current plan snapshot: `{scenario_type}` recovery cost is {money(rec_cost)}, OTI
     return {"response": response, "updated_preferences": {}}
 
 
-def should_answer_locally(user_input: str) -> bool:
-    query = user_input.lower()
-    project_terms = [
-        "how do you work",
-        "how does this software",
-        "operate",
-        "project",
-        "agents",
-        "agent",
-        "architecture",
-        "workflow",
-        "what are the agents",
-        "explain this",
-        "deterministic",
-        "agentic ai",
-        "actually used",
-        "ai tech",
-        "reinforcement",
-        "rl",
-        "last run",
-        "last simulation",
-        "outputs",
-        "outcomes",
-        "point of view",
-        "analysis",
-        "analyzis",
-    ]
-    return any(term in query for term in project_terms)
-
-
 st.set_page_config(
     page_title="Supply Chain Resilience Control Tower",
     page_icon="SC",
@@ -1608,6 +1578,11 @@ with assistant_cols[1]:
                 session_state.get("agent_trace", []),
                 session_state.get("agentic_ai_review", {}),
             )
+            trace_brief = build_agent_outputs_response(session_state.get("agent_trace", []))
+            point_of_view_brief = build_agent_point_of_view_response(
+                session_state.get("agent_trace", []),
+                session_state.get("agentic_ai_review", {}),
+            )
             assistant_prompt = f"""
 Return only JSON with this schema:
 {{
@@ -1616,11 +1591,14 @@ Return only JSON with this schema:
 }}
 Allowed preference keys are:
 min_truck_utilization, max_delay_days, cost_priority, co2_priority, service_level_target, human_approval_required_if_cost_increase_above.
-You are the project assistant for an Agentic Supply Chain Resilience Platform.
-Answer the user's actual question. If they ask how the software works, explain the workflow and agents.
-If they ask about agents, list the agents and their responsibilities.
-If they ask about KPIs, use the supplied numbers only.
-Do not invent KPI numbers. Use only this state:
+You are Gemini powering the project assistant for an Agentic Supply Chain Resilience Platform.
+Answer the user's actual question directly and specifically.
+Do not respond with a generic "I can help with..." menu unless the user asks what you can do.
+If the user asks about the last run, outcomes, outputs, or each agent, summarize the supplied execution trace.
+If the user asks which agent gives point of view or analysis, use the supplied specialist review and identify the relevant agents.
+If the user asks about KPIs, use the supplied numbers only.
+Do not invent KPI numbers, agent outputs, hidden tools, or optimization results.
+Use only this state:
 scenario={scenario_type}
 baseline_kpis={base_kpi}
 disrupted_kpis={disc_kpi}
@@ -1628,6 +1606,8 @@ recovery_kpis={rec_kpi}
 planner_preferences={default_prefs}
 agent_trace={session_state.get("agent_trace", [])}
 agentic_ai_review={session_state.get("agentic_ai_review", {})}
+trace_brief={trace_brief}
+point_of_view_brief={point_of_view_brief}
 known_agents=[
   "SupervisorAgent coordinates the workflow",
   "SecurityAgent validates requests and guardrails",
@@ -1641,10 +1621,10 @@ known_agents=[
 ]
 User query: {user_input}
 """
-            if should_answer_locally(user_input):
-                result = fallback_response
-            else:
+            if has_live_gemini():
                 result = generate_json_with_gemini(assistant_prompt, fallback_response)
+            else:
+                result = fallback_response
             assistant_text = str(result.get("response", fallback_response["response"]))
             updates = result.get("updated_preferences") or {}
             if isinstance(updates, dict) and updates:
